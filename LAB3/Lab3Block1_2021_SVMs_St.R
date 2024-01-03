@@ -2,25 +2,34 @@
 # Author: jose.m.pena@liu.se
 # Made for teaching purposes
 
+# -------------------------------------------
+# Title: Spam filter
+# Author: Erik Hjalmarsson
+# File: Lab3Block1_2021_SVMs_St.R
+# Date: 2024-01-03
+# Last modified: 2024-01-03
+# -------------------------------------------
+library(caret)
 library(kernlab)
 set.seed(1234567890)
 
 data(spam)
+# randomize the data
 foo <- sample(nrow(spam))
 spam <- spam[foo,]
 
-scaler <- preProcess(spam[1:3000,-58])
-tr <- predict(scaler, spam[1:3000, ])
-trva <- predict(scaler, spam[1:3800, ])
-va <- predict(scaler, spam[3001:3800, ])
-te <- predict(scaler, spam[3801:4601, ])
+tr <- spam[1:3000, ]
+va <- spam[3001:3800, ]
+trva <- spam[1:3800, ]
+te <- spam[3801:4601, ]
+spamS <- predict(scaler, spam)
 
-# Never scale the whole dataset before partitioning
-#spam[,-58]<-scale(spam[,-58])
-#tr <- spam[1:3000, ]
-#va <- spam[3001:3800, ]
-#trva <- spam[1:3800, ]
-#te <- spam[3801:4601, ] 
+scaler <- preProcess(tr[,-58])
+tr <- predict(scaler, tr)
+trva <- predict(scaler, trva)
+va <- predict(scaler, va)
+te <- predict(scaler, te)
+
 
 by <- 0.3
 err_va <- NULL
@@ -49,7 +58,7 @@ t <- table(mailtype,te[,58])
 err2 <- (t[1,2]+t[2,1])/sum(t)
 err2
 
-filter3 <- ksvm(type~.,data=spam,kernel="rbfdot",kpar=list(sigma=0.05),C=which.min(err_va)*by,scaled=FALSE)
+filter3 <- ksvm(type~.,data=spamS,kernel="rbfdot",kpar=list(sigma=0.05),C=which.min(err_va)*by,scaled=FALSE)
 mailtype <- predict(filter3,te[,-58])
 t <- table(mailtype,te[,58])
 err3 <- (t[1,2]+t[2,1])/sum(t)
